@@ -45,7 +45,7 @@ public class CollectdDataExtractor {
 //            new CollectdQuery("mongo","27017",null,"update"),
 //            new CollectdQuery("mongo","27017",null,"insert"),
 //            new CollectdQuery("mongo","27017-collectd",null,"object_count"),
-            new CollectdQuery("load",null,null,null)
+//            new CollectdQuery("load",null,null,null)
     };
 
     private MongoClient mongoClient ;
@@ -146,9 +146,7 @@ public class CollectdDataExtractor {
     }
 
     private Sheet getSheet(SXSSFWorkbook wb , String name){
-        System.out.println(name);
         Sheet s = wb.getSheet(name);
-        System.out.println(s);
         if(s == null){
             s = wb.createSheet(name);
         }
