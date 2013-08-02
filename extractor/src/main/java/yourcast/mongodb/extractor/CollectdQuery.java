@@ -6,10 +6,9 @@ import java.util.Date;
 
 /**
  * Created with IntelliJ IDEA.
- * User: binou
+ * User: fabien foerster
  * Date: 25/07/13
  * Time: 12:44
- * To change this template use File | Settings | File Templates.
  */
 public class CollectdQuery {
 
