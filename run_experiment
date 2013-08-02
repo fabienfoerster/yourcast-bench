@@ -1,0 +1,40 @@
+#!/usr/bin/python
+
+import sys, getopt, os, datetime, time , commands
+
+collector = ""
+output = ""
+
+def usage():
+    print "usage run_experiment : run_experiment --collector CollectVMIP --output MyPrettySpreadSheet.xlsx"
+
+try:
+    opts, args = getopt.getopt(sys.argv[1:],"c:o:",["collector=","output="])
+except:
+    usage()
+    sys.exit(2)
+for opt, arg in opts:
+    if opt in ("-c","--collector"):
+        collector = arg.startswith("--") if None else arg
+    elif opt in ("-o","--output"):
+        output = arg.startswith("--") if None else arg
+
+if not collector or not output or not output.endswith('.xlsx') :
+    print "Wrong parameters"
+    usage()
+    sys.exit(1)
+
+i = 1
+script_directory = os.getcwd() 
+script_gatling = script_directory+"/utils/gatling-1.5.2/bin"
+   
+while i <= 10:
+    os.chdir(script_gatling)
+    start = commands.getoutput("date --utc +%s%N | cut -b1-13")
+    os.system("./gatling.sh -s yourcast.BasicYourcastSimulation")
+    end = commands.getoutput("date --utc +%s%N | cut -b1-13")
+    os.chdir(script_directory)
+    os.system("java -jar extractor-jar-with-dependencies.jar "+collector+" "+output+" "+str(start)+" "+str(end)+" "+str(i))
+    i += 1
+
+
