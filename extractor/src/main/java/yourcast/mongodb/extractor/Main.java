@@ -7,10 +7,9 @@ import java.text.ParseException;
 
 /**
  * Created with IntelliJ IDEA.
- * User: binou
+ * User: fabien foerster
  * Date: 29/07/13
  * Time: 09:51
- * To change this template use File | Settings | File Templates.
  */
 public class Main {
     public static void main(String[] args) throws IOException, ParseException, InvalidFormatException {
