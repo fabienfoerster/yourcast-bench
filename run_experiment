@@ -35,7 +35,6 @@ while i <= 10:
     end = str(calendar.timegm(time.gmtime())) + "000"
     os.chdir(script_directory)
     os.system("java -jar extractor-jar-with-dependencies.jar "+collector+" "+output+" "+start+" "+end+" "+str(i))
-    
     i += 1
 
 
