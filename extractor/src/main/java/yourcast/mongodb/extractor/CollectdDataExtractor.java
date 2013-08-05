@@ -19,34 +19,8 @@ import java.util.*;
 */
 public class CollectdDataExtractor {
 
-//    private CollectdQuery[] queries =  {
-//            new CollectdQuery("cpu","average",null,"user"),
-//            new CollectdQuery("cpu","average",null,"system"),
-//            new CollectdQuery("cpu","average",null,"idle"),
-//            new CollectdQuery("cpu","average",null,"wait"),
-//            new CollectdQuery("cpu","average",null,"interrupt"),
-//            new CollectdQuery("cpu","average",null,"softirq"),
-//            new CollectdQuery("cpu","average",null,"steal"),
-//            new CollectdQuery("cpu","average",null,"nice"),
-////            new CollectdQuery("memory",null,null,"used"),
-////            new CollectdQuery("memory",null,null,"free"),
-////            new CollectdQuery("memory",null,null,"buffered"),
-////            new CollectdQuery("memory",null,null,"cached"),
-////            new CollectdQuery("interface","lo","if_octets",null),
-////            new CollectdQuery("interface","lo","if_errors",null),
-////            new CollectdQuery("interface","lo","if_packets",null),
-////            new CollectdQuery("interface","eth1","if_octets",null),
-////            new CollectdQuery("interface","eth1","if_errors",null),
-////            new CollectdQuery("interface","eth1","if_packets",null),
-////            new CollectdQuery("mongo","27017",null,"query"),
-////            new CollectdQuery("mongo","27017",null,"delete"),
-////            new CollectdQuery("mongo","27017",null,"update"),
-////            new CollectdQuery("mongo","27017",null,"insert"),
-////            new CollectdQuery("mongo","27017-collectd",null,"object_count"),
-////            new CollectdQuery("load",null,null,null)
-//    };
-
-    private static final String propertieFile = "extractor.properties";
+    private static final String PROPERTIE_FILE = "extractor.properties";
+    private static final String TEMPLATE = "template.xlsx";
     private String queryFile ;
     private MongoClient mongoClient ;
     private String outputName ;
@@ -56,19 +30,21 @@ public class CollectdDataExtractor {
     private int col_offset;
     private int row_offset;
     private List<CollectdQuery> queries ;
+    private InputStream in ;
 
 
     public CollectdDataExtractor(String host, String outputName , long start , long end, int serie_number) throws IOException {
         mongoClient = new MongoClient(new ServerAddress(host,27017));
         this.outputName = outputName;
         db = mongoClient.getDB("collectd");
-        this.start = start - 7200000 ;
-        this.end = end - 7200000;
-        loadProperties(propertieFile);
+        loadProperties(PROPERTIE_FILE);
         col_offset += serie_number ;
+        this.start = start ;
+        this.end = end ;
         queries = new ArrayList<CollectdQuery>();
         loadQueries(CollectdDataExtractor.class.getClassLoader().getResourceAsStream(queryFile));
         ensureIndex();
+        in = (new File(this.outputName)).exists() ? new FileInputStream(this.outputName) :this.getClass().getClassLoader().getResourceAsStream(TEMPLATE);
     }
 
     private void loadProperties(String propertieFile) throws IOException {
@@ -141,7 +117,7 @@ public class CollectdDataExtractor {
         try{
             for(int i = 0 ; cursor.hasNext(); i++){
                 data = cursor.next();
-                GregorianCalendar cal=new GregorianCalendar();
+                GregorianCalendar cal =new GregorianCalendar();
                 cal.setTime((Date)data.get("time"));
                 for(int j = 0 ; j < rows.length ; j++){
                     rows[j] = getRow(sheets[j],i+ row_offset);
@@ -184,26 +160,8 @@ public class CollectdDataExtractor {
         return s;
     }
 
-//    public void writeToExcel() throws IOException, ParseException {
-//
-//        FileOutputStream out = new FileOutputStream(this.outputName);
-//        SXSSFWorkbook wb = new SXSSFWorkbook(100);
-//        DBCursor cursor ;
-//        for(int q = 0 ; q < queries.length ; q++ ){
-//            cursor = find(queries[q]);
-//            Sheet[] sheets = createSheets(wb,queries[q]);
-//            writeMultipleSheet(sheets,cursor);
-//
-//        }
-//        wb.write(out);
-//        out.close();
-//        wb.dispose();
-//
-//    }
-
     public void writeToExcel() throws IOException, ParseException, InvalidFormatException {
-        String fileToOpen = (new File(this.outputName)).exists() ? this.outputName :"template.xlsx";
-        SXSSFWorkbook wb = new SXSSFWorkbook(new XSSFWorkbook(new FileInputStream(fileToOpen)));
+        SXSSFWorkbook wb = new SXSSFWorkbook(new XSSFWorkbook(in));
         DBCursor cursor ;
         for(CollectdQuery query : queries){
             cursor = find(query);
