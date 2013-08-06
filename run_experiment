@@ -4,12 +4,14 @@ import sys, getopt, os, datetime, time , calendar
 
 collector = ""
 output = ""
+scenario = ""
+nombre_repetitions = 1
 
 def usage():
-    print "usage run_experiment : run_experiment --collector CollectVMIP --output MyPrettySpreadSheet.xlsx"
+    print "usage run_experiment : run_experiment --collector CollectVMIP --scenario ScenarioClassname --output MyPrettySpreadSheet.xlsx"
 
 try:
-    opts, args = getopt.getopt(sys.argv[1:],"c:o:",["collector=","output="])
+    opts, args = getopt.getopt(sys.argv[1:],"c:o:s:",["collector=","output=","scenario="])
 except:
     usage()
     sys.exit(2)
@@ -18,6 +20,8 @@ for opt, arg in opts:
         collector = arg.startswith("--") if None else arg
     elif opt in ("-o","--output"):
         output = arg.startswith("--") if None else arg
+    elif opt in ("-s","--scenario"):
+        scenario = arg.startswith("--") if None else arg
 
 if not collector or not output or not output.endswith('.xlsx') :
     print "Wrong parameters"
@@ -26,12 +30,13 @@ if not collector or not output or not output.endswith('.xlsx') :
 
 i = 1
 script_directory = os.getcwd() 
-script_gatling = script_directory+"/utils/gatling-1.5.2/bin"
+gatling_directory = script_directory+"/utils/gatling-1.5.2/bin"
+simulations_directory = script_directory+"/simulations"
    
-while i <= 10:
-    os.chdir(script_gatling)
+while i <= nombre_repetitions:
+    os.chdir(gatling_directory)
     start = str(calendar.timegm(time.gmtime())) + "000"
-    os.system("./gatling.sh -s yourcast.BasicYourcastSimulation")
+    os.system("./gatling.sh -sf "+simulations_directory+ " -s "+scenario)
     end = str(calendar.timegm(time.gmtime())) + "000"
     os.chdir(script_directory)
     os.system("java -jar extractor-jar-with-dependencies.jar "+collector+" "+output+" "+start+" "+end+" "+str(i))
