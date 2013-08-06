@@ -64,7 +64,7 @@ public class CollectdQuery {
             res.append(type_instance);
         }
         String name = res.toString();
-        name = name.replaceAll("27017-?","");
+        name = name.replaceAll("\\.27017-?","");
         name = name.replaceAll("GenericJMX","jmx");
         return name;
     }
