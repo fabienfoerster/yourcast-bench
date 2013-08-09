@@ -34,3 +34,5 @@ git clone https://github.com/fabienfoerster/yourcast-bench.git
 * **--output** : the name of the excel file you want to store the data 
 * **--start** : the timestamp corresponding of the start value in UTC
 * **--end** : the timestamp corresponding of the end value in UTC
+
+*(For the timestamp in UTC check : [http://www.epochconverter.com/](http://www.epochconverter.com/))*
