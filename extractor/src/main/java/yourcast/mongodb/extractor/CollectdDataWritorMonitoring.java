@@ -27,7 +27,7 @@ public class CollectdDataWritorMonitoring extends CollectdDataWritor {
     public CollectdDataWritorMonitoring(String outputName) throws IOException, InvalidFormatException {
         super(outputName);
         lastColumn = 1 ;
-        sheet = getSheet(sxssfWorkbook,"probes");
+        sheet = getSheet(xssfWorkbook,"probes");
     }
 
 
@@ -38,7 +38,7 @@ public class CollectdDataWritorMonitoring extends CollectdDataWritor {
         DBObject data ;
         Row r ;
         Cell c ;
-        createColumnName(cursor,query);
+        createColumnName(cursor.copy(),query);
         int number_values = 0 ;
         try{
             for(int i = 1 ; cursor.hasNext(); i++){
@@ -65,6 +65,7 @@ public class CollectdDataWritorMonitoring extends CollectdDataWritor {
 
 
     private void createColumnName(DBCursor cursor , CollectdQuery query ){
+
         if(cursor.hasNext()){
             Row r = getRow(sheet,0);
             Cell c = getCell(r,0);

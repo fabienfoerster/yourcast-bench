@@ -65,7 +65,7 @@ public abstract class CollectdDataWritor {
         return c;
     }
 
-    protected XSSFCell getXSSFCell(XSSFRow r, int i){
+    protected XSSFCell getCell(XSSFRow r, int i){
         XSSFCell c = r.getCell(i);
         if(c == null){
             c = r.createCell(i);
@@ -73,7 +73,7 @@ public abstract class CollectdDataWritor {
         return c ;
     }
 
-    protected XSSFRow getXSSFRow(XSSFSheet s, int i){
+    protected XSSFRow getRow(XSSFSheet s, int i){
         XSSFRow r = s.getRow(i);
         if(r == null){
             r = s.createRow(i);
@@ -88,6 +88,15 @@ public abstract class CollectdDataWritor {
         }
         return s;
     }
+
+    protected XSSFSheet getSheet(XSSFWorkbook wb, String name){
+        XSSFSheet s = wb.getSheet(name);
+        if(s == null){
+            s = wb.createSheet(name);
+        }
+        return s;
+    }
+
 
     public abstract void writeToExcel(DBCursor cursor , CollectdQuery query) throws IOException, ParseException, InvalidFormatException;
 

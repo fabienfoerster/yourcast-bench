@@ -34,7 +34,7 @@ public class CollectdDataWritorStress extends CollectdDataWritor {
 
     @Override
     public void writeToExcel(DBCursor cursor , CollectdQuery query ) throws IOException, ParseException, InvalidFormatException {
-        Sheet[] sheets = createSheets(cursor,query);
+        Sheet[] sheets = createSheets(cursor.copy(),query);
         row_write =  writeMultipleSheet(sheets,cursor);
         for(int i = 0 ; i < xssfWorkbook.getNumberOfSheets() ; i++){
             createFormulas(xssfWorkbook.getSheetAt(i),row_write);
@@ -64,19 +64,19 @@ public class CollectdDataWritorStress extends CollectdDataWritor {
     private void createFormulas(XSSFSheet s , int row_count ){
         XSSFCell min , max , average ,stdev ;
         for(int i = 1+row_offset ; i <= row_count+row_offset ; i++){
-            min = getXSSFCell(getXSSFRow(s,i-1),11);
+            min = getCell(getRow(s, i - 1), 11);
             min.setCellType(Cell.CELL_TYPE_FORMULA);
             min.setCellFormula("MIN(B"+i+":K"+i+")");
             min.setCellStyle(cellStyle);
-            max = getXSSFCell(getXSSFRow(s,i-1),12);
+            max = getCell(getRow(s, i - 1), 12);
             max.setCellType(Cell.CELL_TYPE_FORMULA);
             max.setCellFormula("MAX(B"+i+":K"+i+")");
             max.setCellStyle(cellStyle);
-            average = getXSSFCell(getXSSFRow(s,i-1),13);
+            average = getCell(getRow(s, i - 1), 13);
             average.setCellType(Cell.CELL_TYPE_FORMULA);
             average.setCellFormula("AVERAGE(B"+i+":K"+i+")");
             average.setCellStyle(cellStyle);
-            stdev = getXSSFCell(getXSSFRow(s,i-1),14);
+            stdev = getCell(getRow(s, i - 1), 14);
             stdev.setCellType(Cell.CELL_TYPE_FORMULA);
             stdev.setCellFormula("STDEV(B"+i+":K"+i+")");
             stdev.setCellStyle(cellStyle);
@@ -116,26 +116,26 @@ public class CollectdDataWritorStress extends CollectdDataWritor {
 
 
     private void setDefaultText(XSSFSheet s){
-        XSSFRow r = getXSSFRow(s,0);
+        XSSFRow r = getRow(s, 0);
         XSSFCell c ;
-        c = getXSSFCell(r,0);
+        c = getCell(r, 0);
         c.setCellValue("T");
         c.setCellStyle(cellStyle);
         for(int i = 1 ; i <= 10 ; i++){
-            c = getXSSFCell(r, i);
+            c = getCell(r, i);
             c.setCellValue("#"+i);
             c.setCellStyle(cellStyle);
         }
-        c = getXSSFCell(r, 11);
+        c = getCell(r, 11);
         c.setCellValue("MIN");
         c.setCellStyle(cellStyle);
-        c = getXSSFCell(r, 12);
+        c = getCell(r, 12);
         c.setCellValue("MAX");
         c.setCellStyle(cellStyle);
-        c = getXSSFCell(r, 13);
+        c = getCell(r, 13);
         c.setCellValue("AVG");
         c.setCellStyle(cellStyle);
-        c = getXSSFCell(r, 14);
+        c = getCell(r, 14);
         c.setCellValue("STDEV");
         c.setCellStyle(cellStyle);
     }
