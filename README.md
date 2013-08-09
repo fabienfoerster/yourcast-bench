@@ -21,7 +21,7 @@ git clone https://github.com/fabienfoerster/yourcast-bench.git
 ./run_experiment --collector CollectMachineIP --scenario ScenarioClassName --output file.xlsx
 ```
 * **--collector** : the IP of the machine where is stock the collected value
-* **--scenario** : the className of the gatling scenario located in the simulation folder
+* **--scenario** : the className of the gatling scenario located in the simulation folder ( gatling-1.5.2)
 * **--output** : the name of the excel file you want to store the data 
 
 ### extract
