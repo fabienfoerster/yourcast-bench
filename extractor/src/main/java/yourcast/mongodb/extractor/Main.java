@@ -13,7 +13,7 @@ import java.text.ParseException;
  */
 public class Main {
     public static void main(String[] args) throws IOException, ParseException, InvalidFormatException {
-        CollectdDataExtractor extractor = new CollectdDataExtractor(args[0],args[1],Long.parseLong(args[2]),Long.parseLong(args[3]),Integer.parseInt(args[4]));
+        CollectdDataExtractor extractor = new CollectdDataExtractor(args[0],args[1],Long.parseLong(args[2]),Long.parseLong(args[3]),Integer.parseInt(args[4]),Boolean.parseBoolean(args[5]));
         extractor.writeToExcel();
     }
 }
