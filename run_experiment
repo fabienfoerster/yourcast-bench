@@ -5,7 +5,8 @@ import sys, getopt, os, datetime, time , calendar
 collector = ""
 output = ""
 scenario = ""
-nombre_repetitions = 1
+# Maximum repetition is 10 , if you go further we can't promess anything ...
+nombre_repetitions = 3
 
 def usage():
     print "usage run_experiment : run_experiment --collector CollectVMIP --scenario ScenarioClassname --output MyPrettySpreadSheet.xlsx"
@@ -39,7 +40,8 @@ while i <= nombre_repetitions:
     os.system("./gatling.sh -sf "+simulations_directory+ " -s "+scenario)
     end = str(calendar.timegm(time.gmtime())) + "000"
     os.chdir(script_directory)
-    os.system("java -jar extractor-jar-with-dependencies.jar "+collector+" "+output+" "+start+" "+end+" "+str(i))
+    os.system("java -jar extractor-jar-with-dependencies.jar "+collector+" "+output+" "+start+" "+end+" "+str(i)+" false")
+    #os.system("java -jar extractor-3000.jar "+collector+" "+output+" "+start+" "+end+" "+str(i))
     i += 1
 
 
