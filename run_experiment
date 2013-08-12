@@ -41,7 +41,6 @@ while i <= nombre_repetitions:
     end = str(calendar.timegm(time.gmtime())) + "000"
     os.chdir(script_directory)
     os.system("java -jar extractor-jar-with-dependencies.jar "+collector+" "+output+" "+start+" "+end+" "+str(i)+" false")
-    #os.system("java -jar extractor-3000.jar "+collector+" "+output+" "+start+" "+end+" "+str(i))
     i += 1
 
 
