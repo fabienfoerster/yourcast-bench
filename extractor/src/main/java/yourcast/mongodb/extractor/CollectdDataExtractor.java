@@ -27,6 +27,7 @@ public class CollectdDataExtractor {
     private int row_offset;
     private List<CollectdQuery> queries ;
     private CollectdDataWritor writor ;
+    private boolean monitoring ;
 
 
     public CollectdDataExtractor(String host, String outputName, long start, long end, int serie_number , boolean monitoring) throws IOException, InvalidFormatException {
@@ -40,6 +41,7 @@ public class CollectdDataExtractor {
         col_offset += serie_number ;
         loadQueries(CollectdDataExtractor.class.getClassLoader().getResourceAsStream(queryFile));
         ensureIndex();
+        this.monitoring = monitoring ;
         writor = monitoring ? new CollectdDataWritorMonitoring(this.outputName) :new CollectdDataWritorStress(this.outputName,row_offset,col_offset);
     }
 
@@ -91,8 +93,15 @@ public class CollectdDataExtractor {
         writor.open();
         for(CollectdQuery query : queries){
             cursor = find(query);
-            writor.writeToExcel(cursor,query);
+            if(!monitoring){
+                writor.writeToExcel(cursor,query);
+            } else {
+                writor.addCursor(query.getQueryName(),cursor);
+            }
 
+        }
+        if(monitoring){
+            ((CollectdDataWritorMonitoring)writor).writeToExcel();
         }
         writor.close();
 

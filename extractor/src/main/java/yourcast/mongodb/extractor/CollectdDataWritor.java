@@ -9,6 +9,8 @@ import org.apache.poi.xssf.usermodel.*;
 
 import java.io.*;
 import java.text.ParseException;
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  * Created with IntelliJ IDEA.
@@ -23,6 +25,7 @@ public abstract class CollectdDataWritor {
     protected XSSFCellStyle cellStyle ;
     protected String outputName ;
     protected FileOutputStream out ;
+    protected Map<String,DBCursor> cursors ;
 
     public CollectdDataWritor(String outputName) throws IOException, InvalidFormatException {
         this.outputName = outputName ;
@@ -36,6 +39,7 @@ public abstract class CollectdDataWritor {
         }
         out = null ;
         createCellStyle();
+        cursors = new HashMap<String, DBCursor>();
     }
 
 
@@ -100,6 +104,9 @@ public abstract class CollectdDataWritor {
 
     public abstract void writeToExcel(DBCursor cursor , CollectdQuery query) throws IOException, ParseException, InvalidFormatException;
 
+    public void addCursor(String queryName,DBCursor cursor){
+        cursors.put(queryName,cursor);
+    }
 
     public void open() throws FileNotFoundException {
         out = new FileOutputStream(this.outputName);

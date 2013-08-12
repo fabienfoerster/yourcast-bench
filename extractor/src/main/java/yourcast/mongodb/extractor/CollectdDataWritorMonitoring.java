@@ -12,6 +12,7 @@ import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.GregorianCalendar;
+import java.util.Map;
 
 /**
  * Created with IntelliJ IDEA.
@@ -21,73 +22,98 @@ import java.util.GregorianCalendar;
  */
 public class CollectdDataWritorMonitoring extends CollectdDataWritor {
 
-    private int lastColumn ;
+    private int lastColumToWrite;
+    private int lastColum ;
     private Sheet sheet ;
 
     public CollectdDataWritorMonitoring(String outputName) throws IOException, InvalidFormatException {
         super(outputName);
-        lastColumn = 1 ;
-        sheet = getSheet(xssfWorkbook,"probes");
+        lastColumToWrite = 1 ;
+        lastColum = 1 ;
+        sheet = getSheet(sxssfWorkbook,"probes");
     }
-
 
     @Override
     public void writeToExcel(DBCursor cursor, CollectdQuery query) throws IOException, ParseException, InvalidFormatException {
+        throw new RuntimeException("Not implemented");
+    }
+
+
+    public void writeToExcel() throws IOException, ParseException, InvalidFormatException {
         SimpleDateFormat simpleDateFormat = new SimpleDateFormat("dd/MM/yyyy HH:mm:ss");
         GregorianCalendar cal =new GregorianCalendar();
         DBObject data ;
         Row r ;
         Cell c ;
-        createColumnName(cursor.copy(),query);
+        for(Map.Entry<String,DBCursor> entry : cursors.entrySet()){
+            createColumnName(entry.getValue().copy(),entry.getKey());
+        }
+        lastColumToWrite = 1 ;
         int number_values = 0 ;
-        try{
-            for(int i = 1 ; cursor.hasNext(); i++){
-                data = cursor.next();
-                cal.setTime((Date)data.get("time"));
-                r = getRow(sheet,i);
-                c = getCell(r,0);
-                c.setCellValue(simpleDateFormat.format(cal.getTime()));
-                BasicDBList values = (BasicDBList) data.get("values");
-                number_values = values.size() ;
-                for(int j = 0 ; j < values.size() ; j++){
-                    c = getCell(r ,lastColumn+j);
-                    double value =  (Double)values.get(j);
-                    c.setCellValue(value);
+        int i = 1 ;
+        boolean keepOnLooping = true ;
+        while(keepOnLooping){
+            keepOnLooping = false ;
+            for(Map.Entry<String,DBCursor> entry : cursors.entrySet()){
+                keepOnLooping = keepOnLooping || entry.getValue().hasNext() ;
+                if(entry.getValue().hasNext()){
+                    data = entry.getValue().next();
+                    cal.setTime((Date)data.get("time"));
+                    String date = simpleDateFormat.format(cal.getTime());
+                    r = getRow(sheet,i);
+                    c = getCell(r,0);
+                    int k = i ;
+                    while(!c.getStringCellValue().isEmpty()&& !c.getStringCellValue().equals(date)){
+                        k++;
+                        r = getRow(sheet,k);
+                        c = getCell(r,0);
+                    }
 
+                    c.setCellValue(date);
+                    BasicDBList values = (BasicDBList) data.get("values");
+                    number_values = values.size() ;
+                    for(int j = 0 ; j < values.size() ; j++){
+                        c = getCell(r , lastColumToWrite +j);
+                        double value =  (Double)values.get(j);
+                        c.setCellValue(value);
+
+                    }
                 }
-
+                lastColumToWrite += number_values ;
             }
-        }finally {
-            cursor.close();
-            lastColumn += number_values ;
+            i++;
+            lastColum = lastColumToWrite > lastColum ? lastColumToWrite : lastColum ;
+            lastColumToWrite = 1 ;
         }
     }
 
 
-    private void createColumnName(DBCursor cursor , CollectdQuery query ){
+    private void createColumnName(DBCursor cursor , String queryName ){
 
         if(cursor.hasNext()){
             Row r = getRow(sheet,0);
             Cell c = getCell(r,0);
             c.setCellValue("time");
             BasicDBList names = (BasicDBList) cursor.next().get("dsnames");
-            String columnName = query.getQueryName();
+            String columnName = queryName;
             if(names.size() > 1){
                 for(int i = 0 ; i < names.size() ; i++){
-                    c = getCell(r,lastColumn+i);
+                    c = getCell(r, lastColumToWrite +i);
                     columnName += "."+names.get(i).toString();
                     c.setCellValue(columnName);
                 }
+                lastColumToWrite += names.size();
             } else {
-                c = getCell(r,lastColumn);
+                c = getCell(r, lastColumToWrite);
                 c.setCellValue(columnName);
+                lastColumToWrite++ ;
             }
 
         }
     }
 
     private void setAutoSizeColum(){
-        for(int i = 0 ; i < lastColumn ; i++){
+        for(int i = 0 ; i < lastColum; i++){
             sheet.autoSizeColumn(i);
         }
     }
@@ -96,6 +122,6 @@ public class CollectdDataWritorMonitoring extends CollectdDataWritor {
     public void close() throws IOException {
         setAutoSizeColum();
         super.close();
-        lastColumn = 1 ;
+        lastColumToWrite = 1 ;
     }
 }
