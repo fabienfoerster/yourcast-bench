@@ -7,9 +7,6 @@ import org.apache.poi.openxml4j.exceptions.InvalidFormatException;
 import org.apache.poi.ss.usermodel.Cell;
 import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.ss.usermodel.Sheet;
-import org.apache.poi.xssf.usermodel.XSSFCell;
-import org.apache.poi.xssf.usermodel.XSSFRow;
-import org.apache.poi.xssf.usermodel.XSSFSheet;
 
 import java.io.IOException;
 import java.text.ParseException;
@@ -22,7 +19,6 @@ import java.text.ParseException;
  */
 public class CollectdDataWritorStress extends CollectdDataWritor {
 
-    private int row_write ;
     private int row_offset;
     private int col_offset ;
 
@@ -35,11 +31,12 @@ public class CollectdDataWritorStress extends CollectdDataWritor {
     @Override
     public void writeToExcel(DBCursor cursor , CollectdQuery query ) throws IOException, ParseException, InvalidFormatException {
         Sheet[] sheets = createSheets(cursor.copy(),query);
-        row_write =  writeMultipleSheet(sheets,cursor);
-        for(int i = 0 ; i < xssfWorkbook.getNumberOfSheets() ; i++){
-            createFormulas(xssfWorkbook.getSheetAt(i),row_write);
-            setDefaultText(xssfWorkbook.getSheetAt(i));
+        for(Sheet s : sheets){
+            setDefaultText(s);
         }
+        writeMultipleSheet(sheets, cursor);
+
+
     }
 
 
@@ -61,26 +58,24 @@ public class CollectdDataWritorStress extends CollectdDataWritor {
         return sheets;
     }
 
-    private void createFormulas(XSSFSheet s , int row_count ){
-        XSSFCell min , max , average ,stdev ;
-        for(int i = 1+row_offset ; i <= row_count+row_offset ; i++){
-            min = getCell(getRow(s, i - 1), 11);
-            min.setCellType(Cell.CELL_TYPE_FORMULA);
-            min.setCellFormula("MIN(B"+i+":K"+i+")");
-            min.setCellStyle(cellStyle);
-            max = getCell(getRow(s, i - 1), 12);
-            max.setCellType(Cell.CELL_TYPE_FORMULA);
-            max.setCellFormula("MAX(B"+i+":K"+i+")");
-            max.setCellStyle(cellStyle);
-            average = getCell(getRow(s, i - 1), 13);
-            average.setCellType(Cell.CELL_TYPE_FORMULA);
-            average.setCellFormula("AVERAGE(B"+i+":K"+i+")");
-            average.setCellStyle(cellStyle);
-            stdev = getCell(getRow(s, i - 1), 14);
-            stdev.setCellType(Cell.CELL_TYPE_FORMULA);
-            stdev.setCellFormula("STDEV(B"+i+":K"+i+")");
-            stdev.setCellStyle(cellStyle);
-        }
+    private void createFormulas(Sheet s , int row){
+        Cell min,max,average,stdev;
+        min = getCell(getRow(s, row-1), 11);
+        min.setCellType(Cell.CELL_TYPE_FORMULA);
+        min.setCellFormula("MIN(B"+row+":K"+row+")");
+        min.setCellStyle(cellStyle);
+        max = getCell(getRow(s, row-1), 12);
+        max.setCellType(Cell.CELL_TYPE_FORMULA);
+        max.setCellFormula("MAX(B"+row+":K"+row+")");
+        max.setCellStyle(cellStyle);
+        average = getCell(getRow(s, row-1), 13);
+        average.setCellType(Cell.CELL_TYPE_FORMULA);
+        average.setCellFormula("AVERAGE(B"+row+":K"+row+")");
+        average.setCellStyle(cellStyle);
+        stdev = getCell(getRow(s, row-1), 14);
+        stdev.setCellType(Cell.CELL_TYPE_FORMULA);
+        stdev.setCellFormula("STDEV(B"+row+":K"+row+")");
+        stdev.setCellStyle(cellStyle);
 
     }
 
@@ -106,6 +101,7 @@ public class CollectdDataWritorStress extends CollectdDataWritor {
                         cells[j].setCellType(Cell.CELL_TYPE_NUMERIC);
                         cells[j].setCellValue(value);
                     }
+                    createFormulas(sheets[j],i+row_offset+1);
                 }
             }
         }finally {
@@ -115,9 +111,9 @@ public class CollectdDataWritorStress extends CollectdDataWritor {
     }
 
 
-    private void setDefaultText(XSSFSheet s){
-        XSSFRow r = getRow(s, 0);
-        XSSFCell c ;
+    private void setDefaultText(Sheet s){
+        Row r = getRow(s, 0);
+        Cell c ;
         c = getCell(r, 0);
         c.setCellValue("T");
         c.setCellStyle(cellStyle);
