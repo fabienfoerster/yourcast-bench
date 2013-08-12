@@ -1,0 +1,37 @@
+#!/usr/bin/python
+
+import sys, getopt, os, datetime, time , calendar
+
+collector = ""
+output = ""
+start = ""
+end= ""
+
+def usage():
+    print "usage extract: extract --collector CollectVMIP --output MyPrettySpreadSheet.xlsx --start timestamp in utc --end timestamp utc "
+
+try:
+    opts, args = getopt.getopt(sys.argv[1:],"c:o:s:e:",["collector=","output=","start=","end="])
+except:
+    usage()
+    sys.exit(2)
+for opt, arg in opts:
+    if opt in ("-c","--collector"):
+        collector = arg.startswith("--") if None else arg
+    elif opt in ("-o","--output"):
+        output = arg.startswith("--") if None else arg
+    elif opt in ("-s","--start"):
+        start = arg + "000"
+    elif opt in ("-e","--end"):
+        end = arg + "000"
+        
+
+if not collector or not start or not end or not output or not output.endswith('.xlsx') :
+    print "Wrong parameters"
+    usage()
+    sys.exit(1)
+
+os.system("java -jar extractor-jar-with-dependencies.jar "+collector+" "+output+" "+start+" "+end+" "+str(0)+" true")
+
+
+
