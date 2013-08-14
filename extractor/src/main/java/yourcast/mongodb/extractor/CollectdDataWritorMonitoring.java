@@ -19,16 +19,17 @@ import java.util.*;
  * Time: 10:19
  */
 public class CollectdDataWritorMonitoring extends CollectdDataWritor {
-
+    private long start ;
     private int lastColumToWrite;
     private int lastColum ;
     private Sheet sheet ;
 
-    public CollectdDataWritorMonitoring(String outputName) throws IOException, InvalidFormatException {
+    public CollectdDataWritorMonitoring(String outputName, long start ) throws IOException, InvalidFormatException {
         super(outputName);
         lastColumToWrite = 1 ;
         lastColum = 1 ;
         sheet = getSheet(sxssfWorkbook,"probes");
+        this.start = start ;
     }
 
     @Override
@@ -57,8 +58,14 @@ public class CollectdDataWritorMonitoring extends CollectdDataWritor {
         boolean keepOnLooping = true ;
         while(keepOnLooping){
             keepOnLooping = false ;
+            r = getRow(sheet,i);
+            c = getCell(r,0);
+            cal.setTimeInMillis(start);
+            String date = simpleDateFormat.format(cal.getTime());
+            c.setCellValue(date);
+            start += 1000 ;
             for(Map.Entry<String,DBCursor> entry : cursors.entrySet()){
-                number_values = 0 ;
+                number_values = 1 ;
                 keepOnLooping = keepOnLooping || entry.getValue().hasNext() ;
                 if(entry.getValue().hasNext()){
                     if(oldData[k] == null){
@@ -67,12 +74,12 @@ public class CollectdDataWritorMonitoring extends CollectdDataWritor {
                     } else {
                         data = oldData[k];
                     }
-                    cal.setTime((Date)data.get("time"));
-                    String date = simpleDateFormat.format(cal.getTime());
                     r = getRow(sheet,i);
                     c = getCell(r,0);
-                    if(c.getStringCellValue().isEmpty() || date.equals(c.getStringCellValue())){
-                        c.setCellValue(date);
+                    cal.setTime((Date)data.get("time"));
+                    date = simpleDateFormat.format(cal.getTime());
+                    c.setCellType(Cell.CELL_TYPE_STRING);
+                    if(date.equals(c.getStringCellValue())){
                         BasicDBList values = (BasicDBList) data.get("values");
                         number_values = values.size() ;
                         for(int j = 0 ; j < number_values ; j++){
@@ -125,6 +132,9 @@ public class CollectdDataWritorMonitoring extends CollectdDataWritor {
     @Override
     public void close() throws IOException {
         super.close();
+        for(DBCursor cursor : cursors.values()){
+            cursor.close();
+        }
         lastColumToWrite = 1 ;
     }
 }
