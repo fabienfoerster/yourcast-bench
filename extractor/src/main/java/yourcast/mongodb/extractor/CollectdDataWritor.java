@@ -9,7 +9,7 @@ import org.apache.poi.xssf.usermodel.*;
 
 import java.io.*;
 import java.text.ParseException;
-import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.Map;
 
 /**
@@ -19,7 +19,6 @@ import java.util.Map;
  * Time: 21:59
  */
 public abstract class CollectdDataWritor {
-
     protected SXSSFWorkbook sxssfWorkbook ;
     protected XSSFWorkbook xssfWorkbook ;
     protected XSSFCellStyle cellStyle ;
@@ -39,7 +38,7 @@ public abstract class CollectdDataWritor {
         }
         out = null ;
         createCellStyle();
-        cursors = new HashMap<String, DBCursor>();
+        cursors = new LinkedHashMap<String, DBCursor>();
     }
 
 
@@ -69,32 +68,8 @@ public abstract class CollectdDataWritor {
         return c;
     }
 
-    protected XSSFCell getCell(XSSFRow r, int i){
-        XSSFCell c = r.getCell(i);
-        if(c == null){
-            c = r.createCell(i);
-        }
-        return c ;
-    }
-
-    protected XSSFRow getRow(XSSFSheet s, int i){
-        XSSFRow r = s.getRow(i);
-        if(r == null){
-            r = s.createRow(i);
-        }
-        return r ;
-    }
-
     protected Sheet getSheet(SXSSFWorkbook wb, String name){
         Sheet s = wb.getSheet(name);
-        if(s == null){
-            s = wb.createSheet(name);
-        }
-        return s;
-    }
-
-    protected XSSFSheet getSheet(XSSFWorkbook wb, String name){
-        XSSFSheet s = wb.getSheet(name);
         if(s == null){
             s = wb.createSheet(name);
         }
