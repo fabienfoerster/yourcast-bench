@@ -43,17 +43,20 @@ public class CollectdDataWritorMonitoring extends CollectdDataWritor {
         DBObject data ;
         Row r ;
         Cell c ;
+        int k = 0 ;
+        DBObject[] oldData = new DBObject[cursors.size()];
         for(Map.Entry<String,DBCursor> entry : cursors.entrySet()){
-            createColumnName(entry.getValue().copy(),entry.getKey());
+            oldData[k] = entry.getValue().next();
+            createColumnName(oldData[k],entry.getKey());
+            k++;
         }
+        k = 0 ;
         lastColumToWrite = 1 ;
         int number_values;
         int i = 1 ;
         boolean keepOnLooping = true ;
-        DBObject[] oldData = new DBObject[cursors.size()];
         while(keepOnLooping){
             keepOnLooping = false ;
-            int k = 0 ;
             for(Map.Entry<String,DBCursor> entry : cursors.entrySet()){
                 number_values = 0 ;
                 keepOnLooping = keepOnLooping || entry.getValue().hasNext() ;
@@ -83,6 +86,7 @@ public class CollectdDataWritorMonitoring extends CollectdDataWritor {
                 k++;
                 lastColumToWrite += number_values ;
             }
+            k = 0 ;
             i++;
             lastColum = lastColumToWrite > lastColum ? lastColumToWrite : lastColum ;
             lastColumToWrite = 1 ;
@@ -91,28 +95,25 @@ public class CollectdDataWritorMonitoring extends CollectdDataWritor {
     }
 
 
-    private void createColumnName(DBCursor cursor , String queryName ){
-
-        if(cursor.hasNext()){
-            Row r = getRow(sheet,0);
-            Cell c = getCell(r,0);
-            c.setCellValue("time");
-            BasicDBList names = (BasicDBList) cursor.next().get("dsnames");
-            String columnName = queryName;
-            if(names.size() > 1){
-                for(int i = 0 ; i < names.size() ; i++){
-                    c = getCell(r, lastColumToWrite +i);
-                    columnName += "."+names.get(i).toString();
-                    c.setCellValue(columnName);
-                }
-                lastColumToWrite += names.size();
-            } else {
-                c = getCell(r, lastColumToWrite);
+    private void createColumnName(DBObject data , String queryName ){
+        Row r = getRow(sheet,0);
+        Cell c = getCell(r,0);
+        c.setCellValue("time");
+        BasicDBList names = (BasicDBList) data.get("dsnames");
+        String columnName = queryName;
+        if(names.size() > 1){
+            for(int i = 0 ; i < names.size() ; i++){
+                c = getCell(r, lastColumToWrite +i);
+                columnName += "."+names.get(i).toString();
                 c.setCellValue(columnName);
-                lastColumToWrite++ ;
             }
-
+            lastColumToWrite += names.size();
+        } else {
+            c = getCell(r, lastColumToWrite);
+            c.setCellValue(columnName);
+            lastColumToWrite++ ;
         }
+
     }
 
     private void setAutoSizeColum(){
