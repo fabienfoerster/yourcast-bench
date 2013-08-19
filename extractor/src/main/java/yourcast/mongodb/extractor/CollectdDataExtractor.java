@@ -42,7 +42,7 @@ public class CollectdDataExtractor {
         loadQueries(CollectdDataExtractor.class.getClassLoader().getResourceAsStream(queryFile));
         ensureIndex();
         this.monitoring = monitoring ;
-        writor = monitoring ? new CollectdDataWritorMonitoring(this.outputName,start) :new CollectdDataWritorStress(this.outputName,row_offset,col_offset);
+        writor = monitoring ? new CollectdDataWritorMonitoring(this.outputName,start,end) :new CollectdDataWritorStress(this.outputName,row_offset,col_offset);
     }
 
     private void loadProperties(String propertieFile) throws IOException {

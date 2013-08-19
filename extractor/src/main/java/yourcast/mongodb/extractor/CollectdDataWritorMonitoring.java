@@ -19,17 +19,18 @@ import java.util.*;
  * Time: 10:19
  */
 public class CollectdDataWritorMonitoring extends CollectdDataWritor {
-    private long start ;
+    private long start,ligne_max ;
     private int lastColumToWrite;
     private int lastColum ;
     private Sheet sheet ;
 
-    public CollectdDataWritorMonitoring(String outputName, long start ) throws IOException, InvalidFormatException {
+    public CollectdDataWritorMonitoring(String outputName, long start ,long end) throws IOException, InvalidFormatException {
         super(outputName);
         lastColumToWrite = 1 ;
         lastColum = 1 ;
         sheet = getSheet(sxssfWorkbook,"probes");
         this.start = start ;
+        this.ligne_max = end - start ;
     }
 
     @Override
@@ -47,8 +48,10 @@ public class CollectdDataWritorMonitoring extends CollectdDataWritor {
         int k = 0 ;
         DBObject[] oldData = new DBObject[cursors.size()];
         for(Map.Entry<String,DBCursor> entry : cursors.entrySet()){
-            oldData[k] = entry.getValue().next();
-            createColumnName(oldData[k],entry.getKey());
+            if(entry.getValue().hasNext()){
+                oldData[k] = entry.getValue().next();
+                createColumnName(oldData[k],entry.getKey());
+            }
             k++;
         }
         k = 0 ;
@@ -58,6 +61,9 @@ public class CollectdDataWritorMonitoring extends CollectdDataWritor {
         boolean keepOnLooping = true ;
         while(keepOnLooping){
             keepOnLooping = false ;
+            if(i > ligne_max){
+                break;
+            }
             r = getRow(sheet,i);
             c = getCell(r,0);
             cal.setTimeInMillis(start);
