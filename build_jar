@@ -1,0 +1,7 @@
+#!/bin/bash
+pwd=`pwd`
+cd extractor
+mvn clean compile assembly:single
+cd target
+mv extractor-jar-with-dependencies.jar $pwd
+cd $pwd
