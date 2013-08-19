@@ -3,7 +3,9 @@ yourcast-bench
 
 ##Prerequisites
 
-You need to be sure you have python and java installed on your machine 
+* java 1.6
+* python
+* maven
 
 ##Note
 The following script only work on Unix machine ( Linux and Mac )
