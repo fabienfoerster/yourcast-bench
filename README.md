@@ -17,6 +17,12 @@ The utilisation is very simple , you just have to clone the repo
 ```
 git clone https://github.com/fabienfoerster/yourcast-bench.git
 ```
+And you'll have to build the jar to build the program
+
+```
+./build_jar
+```
+
 ### run_experiment
 
 ```
