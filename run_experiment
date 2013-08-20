@@ -30,16 +30,11 @@ if not collector or not output or not output.endswith('.xlsx') :
     sys.exit(1)
 
 i = 1
-script_directory = os.getcwd() 
-gatling_directory = script_directory+"/utils/gatling-1.5.2/bin"
-simulations_directory = script_directory+"/simulations"
    
 while i <= nombre_repetitions:
-    os.chdir(gatling_directory)
     start = str(calendar.timegm(time.gmtime())) + "000"
-    os.system("./gatling.sh -sf "+simulations_directory+ " -s "+scenario)
+    os.system("mvn gatling:execute -Dgatling.simulationClass="+scenario)
     end = str(calendar.timegm(time.gmtime())) + "000"
-    os.chdir(script_directory)
     os.system("java -jar extractor-jar-with-dependencies.jar "+collector+" "+output+" "+start+" "+end+" "+str(i)+" false")
     i += 1
 
