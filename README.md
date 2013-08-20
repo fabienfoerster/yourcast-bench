@@ -29,7 +29,7 @@ And you'll have to build the jar to build the program
 ./run_experiment --collector CollectMachineIP --scenario ScenarioClassName --output file.xlsx
 ```
 * **--collector** : the IP of the machine where is stock the collected value
-* **--scenario** : the className of the gatling scenario located in the simulation folder ( gatling-1.5.2)
+* **--scenario** : the className of the gatling scenario located in the src/test/scala folder ( gatling-1.5.2)
 * **--output** : the name of the excel file you want to store the data 
 
 ### extract
