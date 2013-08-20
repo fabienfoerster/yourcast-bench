@@ -31,7 +31,7 @@ public class CollectdQuery {
         BasicDBObject query = new BasicDBObject();
         Date fromDate = new Date(start);
         Date toDate = new Date(end);
-        query.put("time",new BasicDBObject("$gte",fromDate).append("$lt",toDate));
+        query.put("time",new BasicDBObject("$gte",fromDate).append("$lte",toDate));
         if(plugin_instance != null){
             query.put("plugin_instance",plugin_instance);
         }

@@ -10,6 +10,8 @@ import org.apache.poi.ss.usermodel.Sheet;
 
 import java.io.IOException;
 import java.text.ParseException;
+import java.util.Date;
+import java.util.List;
 
 /**
  * Created with IntelliJ IDEA.
@@ -21,11 +23,18 @@ public class CollectdDataWritorStress extends CollectdDataWritor {
 
     private int row_offset;
     private int col_offset ;
+    private int oldTimestamp ;
+    private long nbRow ;
+    private List<OverviewSheet> overviewSheets ;
 
-    public CollectdDataWritorStress(String outputName,int row_offset , int col_offset) throws IOException, InvalidFormatException {
+    public CollectdDataWritorStress(String outputName,int row_offset , int col_offset,long nbRow,List<OverviewSheet> overviewSheets) throws IOException, InvalidFormatException {
         super(outputName);
         this.row_offset = row_offset ;
         this.col_offset = col_offset ;
+        oldTimestamp = -1 ;
+        this.nbRow = nbRow ;
+        this.overviewSheets = overviewSheets ;
+
     }
 
     @Override
@@ -35,7 +44,7 @@ public class CollectdDataWritorStress extends CollectdDataWritor {
             setDefaultText(s);
         }
         writeMultipleSheet(sheets, cursor);
-
+        writeOverviewSheet();
 
     }
 
@@ -88,10 +97,11 @@ public class CollectdDataWritorStress extends CollectdDataWritor {
 
             for(i = 0 ; cursor.hasNext(); i++){
                 data = cursor.next();
-
                 for(int j = 0 ; j < rows.length ; j++){
                     rows[j] = getRow(sheets[j],i+ row_offset);
                     cells[j] = getCell(rows[j],0);
+                    int timestamp = (int)((Date)data.get("time")).getTime()/1000 ;
+                    i += timestamp_offset(timestamp);
                     cells[j].setCellStyle(cellStyle);
                     cells[j].setCellValue(i);
                     cells[j] = getCell(rows[j], col_offset);
@@ -108,6 +118,45 @@ public class CollectdDataWritorStress extends CollectdDataWritor {
             cursor.close();
         }
         return i;
+    }
+
+    private void writeOverviewSheet(){
+        for(OverviewSheet overviewSheet : overviewSheets){
+            Sheet s = sxssfWorkbook.createSheet(overviewSheet.getName());
+            Row r = s.createRow(0);
+            Cell c = r.createCell(0);
+            c.setCellValue("T");
+            int j = 1 ;
+            for(String name : overviewSheet.getQueryName()){
+                c = r.createCell(j);
+                c.setCellValue(name.replaceAll(overviewSheet.getName()+"-?",""));
+                j++;
+            }
+            for(int i = 1 ; i <= nbRow ; i ++){
+                r = s.createRow(1);
+                c = r.createCell(0);
+                c.setCellValue(i);
+                j=1;
+                for(String name : overviewSheet.getQueryName()){
+                    c = r.createCell(j);
+                    c.setCellType(Cell.CELL_TYPE_FORMULA);
+                    c.setCellValue("$'"+name+"'.$N"+(i+1));
+                }
+
+            }
+            sxssfWorkbook.setSheetOrder(overviewSheet.getName(),0);
+        }
+    }
+
+    private int timestamp_offset(int timestamp){
+        if( oldTimestamp == -1){
+            return 0 ;
+        } else {
+            int offset = timestamp - oldTimestamp ;
+            oldTimestamp = timestamp ;
+            return offset - 1 ;
+        }
+
     }
 
 

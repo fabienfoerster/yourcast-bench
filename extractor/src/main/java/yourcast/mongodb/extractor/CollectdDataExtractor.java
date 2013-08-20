@@ -26,6 +26,7 @@ public class CollectdDataExtractor {
     private int col_offset;
     private int row_offset;
     private List<CollectdQuery> queries ;
+    private List<OverviewSheet> overviewSheets ;
     private CollectdDataWritor writor ;
     private boolean monitoring ;
 
@@ -37,12 +38,13 @@ public class CollectdDataExtractor {
         this.start = start ;
         this.end = end ;
         queries = new ArrayList<CollectdQuery>();
+        overviewSheets = new ArrayList<OverviewSheet>();
         loadProperties(PROPERTIE_FILE);
         col_offset += serie_number ;
         loadQueries(CollectdDataExtractor.class.getClassLoader().getResourceAsStream(queryFile));
         ensureIndex();
         this.monitoring = monitoring ;
-        writor = monitoring ? new CollectdDataWritorMonitoring(this.outputName,start,end) :new CollectdDataWritorStress(this.outputName,row_offset,col_offset);
+        writor = monitoring ? new CollectdDataWritorMonitoring(this.outputName,start,end) :new CollectdDataWritorStress(this.outputName,row_offset,col_offset,end-start,overviewSheets);
     }
 
     private void loadProperties(String propertieFile) throws IOException {
@@ -57,20 +59,30 @@ public class CollectdDataExtractor {
     private void loadQueries(InputStream querieStream) throws IOException {
         BufferedReader in = new BufferedReader(new InputStreamReader(querieStream));
         String currentLine ;
+        OverviewSheet current = null ;
         while((currentLine = in.readLine()) != null){
-            if(!currentLine.startsWith("#")){
-                createQuery(currentLine);
+            if(currentLine.startsWith("%%")){
+                current = new OverviewSheet(currentLine.substring(2));
+                overviewSheets.add(current);
+            }
+            else if(!currentLine.startsWith("#")){
+                CollectdQuery query = createQuery(currentLine);
+                queries.add(query);
+                if(current != null){
+                    current.addQuery(query);
+                }
             }
         }
     }
 
-    private void createQuery(String query){
+    private CollectdQuery createQuery(String query){
         String[] queryParams = query.split("\\.");
+        int nbParams = queryParams.length -1;
         String coll = queryParams[0].isEmpty() ? null : queryParams[0];
-        String plugin_instance = queryParams[1].isEmpty() ? null : queryParams[1];
-        String type = queryParams[2].isEmpty() ? null : queryParams[2];
-        String type_instance = queryParams[3].isEmpty() ? null : queryParams[3];
-        queries.add(new CollectdQuery(coll,plugin_instance,type,type_instance));
+        String plugin_instance = nbParams < 1 ? null : queryParams[1].isEmpty() ? null : queryParams[1];
+        String type = nbParams < 2 ? null : queryParams[2].isEmpty() ? null : queryParams[2];
+        String type_instance = nbParams < 3 ? null : queryParams[3].isEmpty() ? null : queryParams[3];
+        return new CollectdQuery(coll,plugin_instance,type,type_instance);
     }
 
     private void ensureIndex(){
