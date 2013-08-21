@@ -44,7 +44,7 @@ public class CollectdDataExtractor {
         loadQueries(CollectdDataExtractor.class.getClassLoader().getResourceAsStream(queryFile));
         ensureIndex();
         this.monitoring = monitoring ;
-        writor = monitoring ? new CollectdDataWritorMonitoring(this.outputName,start,end) :new CollectdDataWritorStress(this.outputName,row_offset,col_offset,end-start,overviewSheets);
+        writor = monitoring ? new CollectdDataWritorMonitoring(this.outputName,start,end) :new CollectdDataWritorStress(this.outputName,row_offset,col_offset,(end-start)/1000,overviewSheets);
     }
 
     private void loadProperties(String propertieFile) throws IOException {
@@ -69,7 +69,7 @@ public class CollectdDataExtractor {
                 CollectdQuery query = createQuery(currentLine);
                 queries.add(query);
                 if(current != null){
-                    current.addQuery(query);
+                    current.addQuery(query.getQueryName());
                 }
             }
         }
@@ -114,6 +114,8 @@ public class CollectdDataExtractor {
         }
         if(monitoring){
             ((CollectdDataWritorMonitoring)writor).writeToExcel();
+        } else {
+            ((CollectdDataWritorStress)writor).writeOverviewSheet();
         }
         writor.close();
 

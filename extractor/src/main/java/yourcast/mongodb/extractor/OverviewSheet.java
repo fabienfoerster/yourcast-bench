@@ -11,15 +11,23 @@ import java.util.List;
  */
 public class OverviewSheet {
     private String sheetName ;
-    private List<CollectdQuery> queries ;
+    private List<String> queriesNames ;
 
     public OverviewSheet(String sheetName){
-        this.sheetName = sheetName ;
-        queries = new ArrayList<CollectdQuery>();
+        this.sheetName = sheetName + " - Overview" ;
+        queriesNames = new ArrayList<String>();
     }
 
-    public void addQuery(CollectdQuery query){
-        queries.add(query);
+    public void addQuery(String queryName){
+        queriesNames.add(queryName);
+    }
+
+    public void removeQuery(String queryName){
+        queriesNames.remove(queryName);
+    }
+
+    public boolean contains(String queryName){
+        return queriesNames.contains(queryName);
     }
 
     public String getName(){
@@ -27,11 +35,7 @@ public class OverviewSheet {
     }
 
     public List<String> getQueryName(){
-        List<String> names = new ArrayList<String>();
-        for(CollectdQuery query : queries){
-            names.add(query.getQueryName());
-        }
-        return names;
+      return queriesNames;
     }
 
 }

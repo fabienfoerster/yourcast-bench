@@ -44,8 +44,6 @@ public class CollectdDataWritorStress extends CollectdDataWritor {
             setDefaultText(s);
         }
         writeMultipleSheet(sheets, cursor);
-        writeOverviewSheet();
-
     }
 
 
@@ -54,10 +52,21 @@ public class CollectdDataWritorStress extends CollectdDataWritor {
         if(cursor.hasNext()){
             BasicDBList names = (BasicDBList) cursor.next().get("dsnames");
             if(names.size() > 1){
+                OverviewSheet current = null ;
+                for(OverviewSheet overviewSheet : overviewSheets){
+                    if(overviewSheet.contains(query.getQueryName())){
+                        overviewSheet.removeQuery(query.getQueryName());
+                        current = overviewSheet;
+                        break;
+                    }
+                }
                 sheets = new Sheet[names.size()];
                 for(int i = 0 ; i < names.size() ; i++ ){
                     String sheetName = query.getQueryName() + "."+ names.get(i).toString();
                     sheets[i] = getSheet(sxssfWorkbook, sheetName);
+                    if(current != null){
+                        current.addQuery(sheetName);
+                    }
                 }
                 return sheets;
             }
@@ -120,32 +129,37 @@ public class CollectdDataWritorStress extends CollectdDataWritor {
         return i;
     }
 
-    private void writeOverviewSheet(){
+    public void writeOverviewSheet(){
         for(OverviewSheet overviewSheet : overviewSheets){
-            Sheet s = sxssfWorkbook.createSheet(overviewSheet.getName());
-            Row r = s.createRow(0);
-            Cell c = r.createCell(0);
+            Sheet s = getSheet(sxssfWorkbook,overviewSheet.getName());
+            Row r = getRow(s,0);
+            Cell c = getCell(r,0);
             c.setCellValue("T");
             int j = 1 ;
             for(String name : overviewSheet.getQueryName()){
                 c = r.createCell(j);
-                c.setCellValue(name.replaceAll(overviewSheet.getName()+"-?",""));
+                c.setCellValue(name.replaceAll(overviewSheet.getName()+"[\\-\\.]?",""));
                 j++;
             }
             for(int i = 1 ; i <= nbRow ; i ++){
-                r = s.createRow(1);
-                c = r.createCell(0);
+                r = getRow(s,i);
+                c = getCell(r,0);
                 c.setCellValue(i);
                 j=1;
                 for(String name : overviewSheet.getQueryName()){
-                    c = r.createCell(j);
+                    c = getCell(r,j);
                     c.setCellType(Cell.CELL_TYPE_FORMULA);
-                    c.setCellValue("$'"+name+"'.$N"+(i+1));
+                    c.setCellFormula("'"+name+"'!N"+(i+1));
+                    j++;
                 }
 
             }
+            for(int i = 0 ; i < j ; i++){
+                s.autoSizeColumn(i);
+            }
             sxssfWorkbook.setSheetOrder(overviewSheet.getName(),0);
         }
+
     }
 
     private int timestamp_offset(int timestamp){
