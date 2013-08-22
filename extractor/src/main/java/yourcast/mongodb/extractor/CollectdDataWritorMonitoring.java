@@ -56,6 +56,7 @@ public class CollectdDataWritorMonitoring extends CollectdDataWritor {
             }
             k++;
         }
+        setAutoSizeColumn(lastColumnToWrite);
         k = 0 ;
         lastColumnToWrite = 1 ;
         int number_values;
@@ -106,7 +107,7 @@ public class CollectdDataWritorMonitoring extends CollectdDataWritor {
             lastColumn = lastColumnToWrite > lastColumn ? lastColumnToWrite : lastColumn;
             lastColumnToWrite = 1 ;
         }
-        setAutoSizeColumn();
+        setAutoSizeColumn(1);
         System.out.println("Finish writing to "+outputName);
     }
 
@@ -132,7 +133,7 @@ public class CollectdDataWritorMonitoring extends CollectdDataWritor {
 
     }
 
-    private void setAutoSizeColumn(){
+    private void setAutoSizeColumn(int lastColumn){
         for(int i = 0 ; i < lastColumn; i++){
             sheet.autoSizeColumn(i);
         }

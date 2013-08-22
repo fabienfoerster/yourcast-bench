@@ -142,6 +142,9 @@ public class CollectdDataWritorStress extends CollectdDataWritor {
                 c.setCellValue(name.replaceAll(overviewSheet.getName()+"[\\-\\.]?",""));
                 j++;
             }
+            for(int i = 0 ; i < j ; i++){
+                s.autoSizeColumn(i);
+            }
             for(int i = 1 ; i <= nbRow ; i ++){
                 r = getRow(s,i);
                 c = getCell(r,0);
@@ -155,9 +158,7 @@ public class CollectdDataWritorStress extends CollectdDataWritor {
                 }
 
             }
-            for(int i = 0 ; i < j ; i++){
-                s.autoSizeColumn(i);
-            }
+            s.autoSizeColumn(0);
             sxssfWorkbook.setSheetOrder(overviewSheet.getName(),0);
         }
 
