@@ -9,6 +9,11 @@
 .idea
 *.iml
 
+#Eclipse
+.classpath
+.project
+.settings
+
 # Others #
 *~*
 utils/gatling-1.5.2/results
