@@ -39,6 +39,7 @@ public class CollectdDataWritorStress extends CollectdDataWritor {
 
     @Override
     public void writeToExcel(DBCursor cursor , CollectdQuery query ) throws IOException, ParseException, InvalidFormatException {
+        System.out.println("Write :"+query.getQueryName());
         Sheet[] sheets = createSheets(cursor.copy(),query);
         for(Sheet s : sheets){
             setDefaultText(s);

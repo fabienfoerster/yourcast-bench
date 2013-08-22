@@ -53,6 +53,7 @@ public class CollectdDataExtractor {
         row_offset = Integer.parseInt(prop.getProperty("row_offset"));
         col_offset = Integer.parseInt(prop.getProperty("col_offset"));
         queryFile = prop.getProperty("query_file");
+        System.out.println("Load properties complete");
 
     }
 
@@ -73,6 +74,7 @@ public class CollectdDataExtractor {
                 }
             }
         }
+        System.out.println("Queries created");
     }
 
     private CollectdQuery createQuery(String query){
@@ -94,6 +96,7 @@ public class CollectdDataExtractor {
     }
 
     private DBCursor find(CollectdQuery collectdQuery){
+        System.out.println("Find : " + collectdQuery.getQueryName());
         DBCollection coll = db.getCollection(collectdQuery.getCollectionName());
         BasicDBObject query = collectdQuery.buildQuery(this.start, this.end);
         return coll.find(query);

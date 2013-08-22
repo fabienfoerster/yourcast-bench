@@ -20,17 +20,18 @@ import java.util.*;
  */
 public class CollectdDataWritorMonitoring extends CollectdDataWritor {
     private long start,ligne_max ;
-    private int lastColumToWrite;
-    private int lastColum ;
+    private int lastColumnToWrite;
+    private int lastColumn;
     private Sheet sheet ;
 
     public CollectdDataWritorMonitoring(String outputName, long start ,long end) throws IOException, InvalidFormatException {
         super(outputName);
-        lastColumToWrite = 1 ;
-        lastColum = 1 ;
+        lastColumnToWrite = 1 ;
+        lastColumn = 1 ;
         sheet = getSheet(sxssfWorkbook,"probes");
         this.start = start ;
-        this.ligne_max = end - start ;
+        // The max number of line correspond to the second between start and end but we have the time in milliseconds
+        this.ligne_max = (end - start ) / 1000;
     }
 
     @Override
@@ -40,6 +41,7 @@ public class CollectdDataWritorMonitoring extends CollectdDataWritor {
 
 
     public void writeToExcel() throws IOException, ParseException, InvalidFormatException {
+        System.out.println("Begin writing to "+outputName);
         SimpleDateFormat simpleDateFormat = new SimpleDateFormat("dd/MM/yyyy HH:mm:ss");
         GregorianCalendar cal =new GregorianCalendar();
         DBObject data ;
@@ -55,7 +57,7 @@ public class CollectdDataWritorMonitoring extends CollectdDataWritor {
             k++;
         }
         k = 0 ;
-        lastColumToWrite = 1 ;
+        lastColumnToWrite = 1 ;
         int number_values;
         int i = 1 ;
         boolean keepOnLooping = true ;
@@ -89,7 +91,7 @@ public class CollectdDataWritorMonitoring extends CollectdDataWritor {
                         BasicDBList values = (BasicDBList) data.get("values");
                         number_values = values.size() ;
                         for(int j = 0 ; j < number_values ; j++){
-                            c = getCell(r , lastColumToWrite +j);
+                            c = getCell(r , lastColumnToWrite +j);
                             double value =  (Double)values.get(j);
                             c.setCellValue(value);
                         }
@@ -97,14 +99,15 @@ public class CollectdDataWritorMonitoring extends CollectdDataWritor {
                     }
                 }
                 k++;
-                lastColumToWrite += number_values ;
+                lastColumnToWrite += number_values ;
             }
             k = 0 ;
             i++;
-            lastColum = lastColumToWrite > lastColum ? lastColumToWrite : lastColum ;
-            lastColumToWrite = 1 ;
+            lastColumn = lastColumnToWrite > lastColumn ? lastColumnToWrite : lastColumn;
+            lastColumnToWrite = 1 ;
         }
-        setAutoSizeColum();
+        setAutoSizeColumn();
+        System.out.println("Finish writing to "+outputName);
     }
 
 
@@ -116,21 +119,21 @@ public class CollectdDataWritorMonitoring extends CollectdDataWritor {
         String columnName = queryName;
         if(names.size() > 1){
             for(int i = 0 ; i < names.size() ; i++){
-                c = getCell(r, lastColumToWrite +i);
+                c = getCell(r, lastColumnToWrite +i);
                 columnName += "."+names.get(i).toString();
                 c.setCellValue(columnName);
             }
-            lastColumToWrite += names.size();
+            lastColumnToWrite += names.size();
         } else {
-            c = getCell(r, lastColumToWrite);
+            c = getCell(r, lastColumnToWrite);
             c.setCellValue(columnName);
-            lastColumToWrite++ ;
+            lastColumnToWrite++ ;
         }
 
     }
 
-    private void setAutoSizeColum(){
-        for(int i = 0 ; i < lastColum; i++){
+    private void setAutoSizeColumn(){
+        for(int i = 0 ; i < lastColumn; i++){
             sheet.autoSizeColumn(i);
         }
     }
@@ -141,6 +144,6 @@ public class CollectdDataWritorMonitoring extends CollectdDataWritor {
         for(DBCursor cursor : cursors.values()){
             cursor.close();
         }
-        lastColumToWrite = 1 ;
+        lastColumnToWrite = 1 ;
     }
 }
