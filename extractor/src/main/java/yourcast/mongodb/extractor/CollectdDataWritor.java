@@ -30,12 +30,10 @@ public abstract class CollectdDataWritor {
         this.outputName = outputName ;
         File f = new File(this.outputName);
         if(f.exists()){
-            xssfWorkbook = new XSSFWorkbook(new FileInputStream(this.outputName));
-            sxssfWorkbook = new SXSSFWorkbook(xssfWorkbook);
-        } else {
-            sxssfWorkbook = new SXSSFWorkbook(100);
-            xssfWorkbook = sxssfWorkbook.getXSSFWorkbook();
+            f.delete();
         }
+        sxssfWorkbook = new SXSSFWorkbook(100);
+        xssfWorkbook = sxssfWorkbook.getXSSFWorkbook();
         out = null ;
         createCellStyle();
         cursors = new LinkedHashMap<String, DBCursor>();
@@ -77,10 +75,14 @@ public abstract class CollectdDataWritor {
     }
 
 
-    public abstract void writeToExcel(DBCursor cursor , CollectdQuery query) throws IOException, ParseException, InvalidFormatException;
+    public abstract void writeToExcel() throws IOException, ParseException, InvalidFormatException;
 
     public void addCursor(String queryName,DBCursor cursor){
         cursors.put(queryName,cursor);
+    }
+
+    public void resetCursor(){
+        cursors = new LinkedHashMap<String, DBCursor>();
     }
 
     public void open() throws FileNotFoundException {

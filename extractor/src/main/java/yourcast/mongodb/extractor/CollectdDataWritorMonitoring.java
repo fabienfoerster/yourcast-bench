@@ -35,11 +35,6 @@ public class CollectdDataWritorMonitoring extends CollectdDataWritor {
     }
 
     @Override
-    public void writeToExcel(DBCursor cursor, CollectdQuery query) throws IOException, ParseException, InvalidFormatException {
-        throw new RuntimeException("Not implemented");
-    }
-
-
     public void writeToExcel() throws IOException, ParseException, InvalidFormatException {
         System.out.println("Begin writing to "+outputName);
         SimpleDateFormat simpleDateFormat = new SimpleDateFormat("dd/MM/yyyy HH:mm:ss");

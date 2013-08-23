@@ -12,6 +12,7 @@ import java.io.IOException;
 import java.text.ParseException;
 import java.util.Date;
 import java.util.List;
+import java.util.Map;
 
 /**
  * Created with IntelliJ IDEA.
@@ -24,46 +25,51 @@ public class CollectdDataWritorStress extends CollectdDataWritor {
     private int row_offset;
     private int col_offset ;
     private int oldTimestamp ;
-    private long nbRow ;
     private List<OverviewSheet> overviewSheets ;
 
-    public CollectdDataWritorStress(String outputName,int row_offset , int col_offset,long nbRow,List<OverviewSheet> overviewSheets) throws IOException, InvalidFormatException {
+    public CollectdDataWritorStress(String outputName,int row_offset , int col_offset,List<OverviewSheet> overviewSheets) throws IOException, InvalidFormatException {
         super(outputName);
         this.row_offset = row_offset ;
         this.col_offset = col_offset ;
         oldTimestamp = -1 ;
-        this.nbRow = nbRow ;
         this.overviewSheets = overviewSheets ;
 
     }
 
     @Override
-    public void writeToExcel(DBCursor cursor , CollectdQuery query ) throws IOException, ParseException, InvalidFormatException {
-        System.out.println("Write :"+query.getQueryName());
-        Sheet[] sheets = createSheets(cursor.copy(),query);
-        for(Sheet s : sheets){
-            setDefaultText(s);
+    public void writeToExcel() throws IOException, ParseException, InvalidFormatException {
+        Sheet[] sheets = null ;
+        for(Map.Entry<String,DBCursor> entry : cursors.entrySet()){
+            System.out.println("Write :"+entry.getKey());
+            sheets = createSheets(entry.getValue().copy(),entry.getKey());
+            break;
         }
-        writeMultipleSheet(sheets, cursor);
+        if(sheets != null){
+            for(Sheet s : sheets){
+                setDefaultText(s);
+            }
+            writeMultipleSheet(sheets);
+        }
     }
 
 
-    private Sheet[] createSheets(DBCursor cursor , CollectdQuery query){
+    private Sheet[] createSheets(DBCursor cursor , String queryName){
+        String realName = queryName.replaceAll("#..?", "");
         Sheet[] sheets = new Sheet[1] ;
         if(cursor.hasNext()){
             BasicDBList names = (BasicDBList) cursor.next().get("dsnames");
             if(names.size() > 1){
                 OverviewSheet current = null ;
                 for(OverviewSheet overviewSheet : overviewSheets){
-                    if(overviewSheet.contains(query.getQueryName())){
-                        overviewSheet.removeQuery(query.getQueryName());
+                    if(overviewSheet.contains(realName)){
+                        overviewSheet.removeQuery(realName);
                         current = overviewSheet;
                         break;
                     }
                 }
                 sheets = new Sheet[names.size()];
                 for(int i = 0 ; i < names.size() ; i++ ){
-                    String sheetName = query.getQueryName() + "."+ names.get(i).toString();
+                    String sheetName = realName + "."+ names.get(i).toString();
                     sheets[i] = getSheet(sxssfWorkbook, sheetName);
                     if(current != null){
                         current.addQuery(sheetName);
@@ -73,61 +79,85 @@ public class CollectdDataWritorStress extends CollectdDataWritor {
             }
 
         }
-        sheets[0] = getSheet(sxssfWorkbook, query.getQueryName());
+        sheets[0] = getSheet(sxssfWorkbook, realName);
         return sheets;
     }
 
-    private void createFormulas(Sheet s , int row){
+    private void createFormulas(Row r , int row){
         Cell min,max,average,stdev;
-        min = getCell(getRow(s, row-1), 11);
+        min = getCell(r, 11);
         min.setCellType(Cell.CELL_TYPE_FORMULA);
         min.setCellFormula("MIN(B"+row+":K"+row+")");
         min.setCellStyle(cellStyle);
-        max = getCell(getRow(s, row-1), 12);
+        max = getCell(r, 12);
         max.setCellType(Cell.CELL_TYPE_FORMULA);
         max.setCellFormula("MAX(B"+row+":K"+row+")");
         max.setCellStyle(cellStyle);
-        average = getCell(getRow(s, row-1), 13);
+        average = getCell(r, 13);
         average.setCellType(Cell.CELL_TYPE_FORMULA);
         average.setCellFormula("AVERAGE(B"+row+":K"+row+")");
         average.setCellStyle(cellStyle);
-        stdev = getCell(getRow(s, row-1), 14);
+        stdev = getCell(r, 14);
         stdev.setCellType(Cell.CELL_TYPE_FORMULA);
         stdev.setCellFormula("STDEV(B"+row+":K"+row+")");
         stdev.setCellStyle(cellStyle);
 
     }
 
-    private int writeMultipleSheet(Sheet[] sheets , DBCursor cursor){
+    private void writeMultipleSheet(Sheet[] sheets){
         Row[] rows = new Row[sheets.length];
         Cell[] cells = new Cell[sheets.length];
         DBObject data ;
-        int i = 0;
+        int i = 0 ;
         try{
+            boolean keepOnLooping = true ;
+            while(keepOnLooping){
+                keepOnLooping = false ;
+                col_offset = 1 ;
+                for(Map.Entry<String,DBCursor> entry : cursors.entrySet()){
+                    System.out.println(entry.getKey());
+                    System.out.println("Col offset " + col_offset);
+                    keepOnLooping = keepOnLooping || entry.getValue().hasNext() ;
+                    if(entry.getValue().hasNext()){
+                        data = entry.getValue().next();
+                        for(int j = 0 ; j < rows.length ; j++){
+                            rows[j] = getRow(sheets[j],i+row_offset);
+                            cells[j] = getCell(rows[j],0);
+                            int timestamp = (int)((Date)data.get("time")).getTime()/1000 ;
+                            i += timestamp_offset(timestamp);
+                            cells[j].setCellStyle(cellStyle);
+                            cells[j].setCellValue(i);
+                        }
 
-            for(i = 0 ; cursor.hasNext(); i++){
-                data = cursor.next();
-                for(int j = 0 ; j < rows.length ; j++){
-                    rows[j] = getRow(sheets[j],i+ row_offset);
-                    cells[j] = getCell(rows[j],0);
-                    int timestamp = (int)((Date)data.get("time")).getTime()/1000 ;
-                    i += timestamp_offset(timestamp);
-                    cells[j].setCellStyle(cellStyle);
-                    cells[j].setCellValue(i);
-                    cells[j] = getCell(rows[j], col_offset);
-                    BasicDBList values = (BasicDBList) data.get("values");
-                    for(int k = 0 ; k < sheets.length ; k++){
-                        Double value = (Double)values.get(k);
-                        cells[j].setCellType(Cell.CELL_TYPE_NUMERIC);
-                        cells[j].setCellValue(value);
+                        BasicDBList values = (BasicDBList) data.get("values");
+                        for(int j = 0 ; j < sheets.length ; j++){
+                            cells[j] = getCell(rows[j],col_offset);
+                            Double value = (Double)values.get(j);
+                            cells[j].setCellType(Cell.CELL_TYPE_NUMERIC);
+                            cells[j].setCellValue(value);
+                        }
                     }
-                    createFormulas(sheets[j],i+row_offset+1);
+                    col_offset++;
+                    System.out.println(col_offset);
                 }
+                if(keepOnLooping){
+                    for(int j = 0 ; j < rows.length ; j++){
+                        createFormulas(rows[j],i+row_offset+1);
+                    }
+                }
+                i++;
             }
         }finally {
-            cursor.close();
+            for(DBCursor cursor : cursors.values()){
+                cursor.close();
+            }
         }
-        return i;
+        for(OverviewSheet overviewSheet : overviewSheets){
+            if(overviewSheet.getQueryName().contains(sheets[0].getSheetName())){
+                overviewSheet.setNbRow(i-1);
+                break;
+            }
+        }
     }
 
     public void writeOverviewSheet(){
@@ -145,7 +175,7 @@ public class CollectdDataWritorStress extends CollectdDataWritor {
             for(int i = 0 ; i < j ; i++){
                 s.autoSizeColumn(i);
             }
-            for(int i = 1 ; i <= nbRow ; i ++){
+            for(int i = 1 ; i <= overviewSheet.getNbRow() ; i ++){
                 r = getRow(s,i);
                 c = getCell(r,0);
                 c.setCellValue(i);

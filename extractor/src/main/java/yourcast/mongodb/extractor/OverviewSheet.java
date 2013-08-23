@@ -12,10 +12,12 @@ import java.util.List;
 public class OverviewSheet {
     private String sheetName ;
     private List<String> queriesNames ;
+    private int nbRow ;
 
     public OverviewSheet(String sheetName){
         this.sheetName = sheetName + " - Overview" ;
         queriesNames = new ArrayList<String>();
+        nbRow = 0 ;
     }
 
     public void addQuery(String queryName){
@@ -38,4 +40,11 @@ public class OverviewSheet {
       return queriesNames;
     }
 
+    public int getNbRow() {
+        return nbRow;
+    }
+
+    public void setNbRow(int nbRow) {
+        this.nbRow = nbRow;
+    }
 }

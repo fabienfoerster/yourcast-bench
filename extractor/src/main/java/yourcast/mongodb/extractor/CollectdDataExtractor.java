@@ -29,22 +29,33 @@ public class CollectdDataExtractor {
     private List<OverviewSheet> overviewSheets ;
     private CollectdDataWritor writor ;
     private boolean monitoring ;
+    private String experimentsTimeFile;
 
-
-    public CollectdDataExtractor(String host, String outputName, long start, long end, int serie_number , boolean monitoring) throws IOException, InvalidFormatException {
+    private CollectdDataExtractor(String host, String outputName, boolean monitoring) throws IOException, InvalidFormatException {
         mongoClient = new MongoClient(new ServerAddress(host,27017));
         this.outputName = outputName;
         db = mongoClient.getDB("collectd");
-        this.start = start ;
-        this.end = end ;
         queries = new ArrayList<CollectdQuery>();
         overviewSheets = new ArrayList<OverviewSheet>();
         loadProperties(PROPERTIE_FILE);
-        col_offset += serie_number ;
         loadQueries(CollectdDataExtractor.class.getClassLoader().getResourceAsStream(queryFile));
         ensureIndex();
         this.monitoring = monitoring ;
-        writor = monitoring ? new CollectdDataWritorMonitoring(this.outputName,start,end) :new CollectdDataWritorStress(this.outputName,row_offset,col_offset,(end-start)/1000,overviewSheets);
+
+    }
+
+    public CollectdDataExtractor(String host, String outputName, boolean monitoring, long start, long end) throws IOException, InvalidFormatException {
+        this(host,outputName,monitoring);
+        this.start = start ;
+        this.end = end ;
+        writor = new CollectdDataWritorMonitoring(this.outputName,start,end);
+    }
+
+    public CollectdDataExtractor(String host,String outputName,boolean monitoring,String experimentsTimeFile) throws IOException, InvalidFormatException {
+        this(host,outputName,monitoring);
+        this.experimentsTimeFile = experimentsTimeFile ;
+        writor = new CollectdDataWritorStress(this.outputName,row_offset,col_offset,overviewSheets);
+        System.out.println("Experience time are in : "+experimentsTimeFile);
     }
 
     private void loadProperties(String propertieFile) throws IOException {
@@ -96,32 +107,53 @@ public class CollectdDataExtractor {
     }
 
     private DBCursor find(CollectdQuery collectdQuery){
-        System.out.println("Find : " + collectdQuery.getQueryName());
         DBCollection coll = db.getCollection(collectdQuery.getCollectionName());
         BasicDBObject query = collectdQuery.buildQuery(this.start, this.end);
+        System.out.println("Find : "+query.toString());
         return coll.find(query);
 
+    }
+
+    private boolean setStartEnd(BufferedReader r) throws IOException {
+        String currentLine  ;
+        if((currentLine = r.readLine()) != null){
+            String result[] = currentLine.split("-");
+            start = Long.parseLong(result[0]);
+            end = Long.parseLong(result[1]);
+            col_offset++;
+            System.out.println("For experience #"+col_offset);
+            return true;
+        }
+        return false ;
     }
 
     public void writeToExcel() throws IOException, ParseException, InvalidFormatException {
         DBCursor cursor ;
         writor.open();
-        for(CollectdQuery query : queries){
-            cursor = find(query);
-            if(!monitoring){
-                writor.writeToExcel(cursor,query);
-            } else {
-                writor.addCursor(query.getQueryName(),cursor);
+        if(!monitoring){
+            System.out.println("Stress simulation mode");
+            for(CollectdQuery query : queries){
+                BufferedReader reader = new BufferedReader(new FileReader(experimentsTimeFile));
+                System.out.println("Writing : "+query.getQueryName());
+                while(setStartEnd(reader)){
+                    cursor = find(query);
+                    writor.addCursor(query.getQueryName()+"#"+col_offset,cursor);
+                }
+                writor.writeToExcel();
+                writor.resetCursor();
+                col_offset = 0 ;
             }
-
-        }
-        if(monitoring){
-            ((CollectdDataWritorMonitoring)writor).writeToExcel();
-        } else {
             ((CollectdDataWritorStress)writor).writeOverviewSheet();
         }
+        else {
+            System.out.println("Monitoring mode");
+            for(CollectdQuery query : queries){
+                cursor = find(query);
+                writor.addCursor(query.getQueryName(), cursor);
+            }
+            writor.writeToExcel();
+        }
         writor.close();
-
     }
 
 }

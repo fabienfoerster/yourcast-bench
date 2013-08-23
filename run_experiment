@@ -30,12 +30,16 @@ if not collector or not output or not output.endswith('.xlsx') :
     sys.exit(1)
 
 i = 1
-   
+result = '/tmp/experiments_time'
+f = open(result,'w')
 while i <= nombre_repetitions:
     os.system("mvn gatling:execute -Dgatling.simulationClass="+scenario)
     start = open("/tmp/start_experiment","r").read().strip('\n')
     end = open("/tmp/end_experiment","r").read().strip('\n')
-    os.system("java -jar extractor-jar-with-dependencies.jar "+collector+" "+output+" "+start+" "+end+" "+str(i)+" false")
+    f.write(start+"-"+end+"\n")
     i += 1
+
+f.close()
+os.system("java -jar extractor-jar-with-dependencies.jar "+collector+" "+output+" false "+result)
 
 
