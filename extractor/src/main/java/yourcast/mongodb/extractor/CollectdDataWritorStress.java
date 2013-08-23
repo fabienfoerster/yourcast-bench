@@ -115,8 +115,6 @@ public class CollectdDataWritorStress extends CollectdDataWritor {
                 keepOnLooping = false ;
                 col_offset = 1 ;
                 for(Map.Entry<String,DBCursor> entry : cursors.entrySet()){
-                    System.out.println(entry.getKey());
-                    System.out.println("Col offset " + col_offset);
                     keepOnLooping = keepOnLooping || entry.getValue().hasNext() ;
                     if(entry.getValue().hasNext()){
                         data = entry.getValue().next();
@@ -138,7 +136,6 @@ public class CollectdDataWritorStress extends CollectdDataWritor {
                         }
                     }
                     col_offset++;
-                    System.out.println(col_offset);
                 }
                 if(keepOnLooping){
                     for(int j = 0 ; j < rows.length ; j++){
