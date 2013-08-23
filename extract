@@ -31,7 +31,7 @@ if not collector or not start or not end or not output or not output.endswith('.
     usage()
     sys.exit(1)
 
-os.system("java -Xmx2048M -Xms1024M -jar extractor-jar-with-dependencies.jar "+collector+" "+output+" "+start+" "+end+" "+str(0)+" true")
+os.system("java -Xmx2048M -Xms1024M -jar extractor-jar-with-dependencies.jar "+collector+" "+output+" true "+start+" "+end)
 
 
 
